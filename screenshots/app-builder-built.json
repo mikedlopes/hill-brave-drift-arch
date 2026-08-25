@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Pi Zero Case",
+      "hasCanvas": true,
+      "bodyTextLen": 239,
+      "bodyTextHash": "9bee7c96d127c34b4ee574e44e2ceea4d7d99061753eb286ae57b86a392967bc",
+      "bodyTextPrefix": "RASPBERRY PI ZERO Voronoi lid Organic honeycomb lattice across t",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Pi Zero Case",
+      "hasCanvas": true,
+      "bodyTextLen": 202,
+      "bodyTextHash": "17ea022e1754576b770dadc8e55838ba62b0f1562d81b9b9534e9bfcc44e4e7a",
+      "bodyTextPrefix": "RASPBERRY PI ZERO Voronoi lid Organic honeycomb lattice across t",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}
