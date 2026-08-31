@@ -1,0 +1,6 @@
+Roboto Bold
+Copyright 2011 Google Inc.
+Licensed under the Apache License, Version 2.0
+https://github.com/googlefonts/roboto
+
+Used as the Ergo docs typeface (mkdocs.yml: font.text = Roboto).

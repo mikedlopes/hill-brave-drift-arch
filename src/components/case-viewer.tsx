@@ -1,139 +1,99 @@
-import { Suspense, useEffect, useLayoutEffect, useMemo } from "react";
-import { Canvas, useLoader } from "@react-three/fiber";
-import { ContactShadows, OrbitControls } from "@react-three/drei";
-import { STLLoader } from "three/addons/loaders/STLLoader.js";
-import { BoxGeometry, DoubleSide, type BufferGeometry } from "three";
-import { buildVoronoiLidParts, LID } from "@/lib/voronoi-lid";
+"use client";
 
-export type PartView = "lid" | "bottom" | "assembled";
+import { Component, memo, useEffect, useState, type ComponentType, type ErrorInfo, type ReactNode } from "react";
+import { MeshProgress } from "./viewer-loader";
+import { getMeshBuilding, getMeshStep, subscribeMeshBuilding, subscribeMeshStep } from "@/lib/mesh-progress";
+import { previewStats, subscribePreviewStats } from "@/lib/preview-stats";
+import type { CaseViewerProps } from "./case-viewer-types";
 
-const FILAMENT = "#e24a1c";
-const LID_Z = 8.05;
+export type { CaseViewerProps, PartView, CameraFocus } from "./case-viewer-types";
 
-const filamentMat = {
-  color: FILAMENT,
-  roughness: 0.42,
-  metalness: 0.06,
-  envMapIntensity: 0.4,
-  side: DoubleSide,
-} as const;
-
-function StlPart({ url, position }: { url: string; position?: [number, number, number] }) {
-  const geom = useLoader(STLLoader, url) as BufferGeometry;
-
-  useLayoutEffect(() => {
-    geom.computeVertexNormals();
-    geom.computeBoundingBox();
-  }, [geom]);
-
-  return (
-    <mesh geometry={geom} position={position} castShadow receiveShadow>
-      <meshStandardMaterial {...filamentMat} />
-    </mesh>
-  );
+class CanvasGuard extends Component<{ children: ReactNode; onFail?: () => void }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(err: Error, info: ErrorInfo) {
+    console.warn("3D canvas crashed", err, info.componentStack);
+    this.props.onFail?.();
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
 }
 
-function LidMesh({ scale, position }: { scale: number; position?: [number, number, number] }) {
-  const parts = useMemo(() => buildVoronoiLidParts(scale), [scale]);
-  const bar = useMemo(() => new BoxGeometry(1, 1, 1), []);
-
+export const CaseViewer = memo(function CaseViewer(props: CaseViewerProps) {
+  const [CanvasCmp, setCanvasCmp] = useState<ComponentType<CaseViewerProps> | null>(null);
+  const [glFailed, setGlFailed] = useState(false);
+  const [glLost, setGlLost] = useState(false);
+  const [step, setStep] = useState(getMeshStep);
+  const [building, setBuilding] = useState(getMeshBuilding);
+  const [late, setLate] = useState(false);
   useEffect(() => {
-    return () => {
-      parts.frame.dispose();
-      parts.lip.dispose();
-      parts.pads.dispose();
+    let alive = true;
+    const boot = () => {
+      if (!alive) return;
+      void import("@/lib/preview-loader").then((m) => m.loadBakedPair()).catch(() => {});
+      void import("./case-canvas")
+        .then((mod) => {
+          if (alive) setCanvasCmp(() => mod.CaseCanvas);
+        })
+        .catch((err) => {
+          console.warn("3D canvas failed to load", err);
+          setGlFailed(true);
+        });
     };
-  }, [parts]);
-
+    const idle = window.setTimeout(boot, 0);
+    return () => {
+      alive = false;
+      window.clearTimeout(idle);
+    };
+  }, []);
+  useEffect(() => subscribeMeshStep(setStep), []);
+  useEffect(() => subscribeMeshBuilding(setBuilding), []);
   useEffect(() => {
-    return () => bar.dispose();
-  }, [bar]);
-
+    return subscribePreviewStats(() => {
+      if (previewStats.contextLost > 0) setGlLost(true);
+    });
+  }, []);
+  const ready = step.id === "ready";
+  useEffect(() => {
+    if (ready) {
+      setLate(false);
+      return;
+    }
+    const t = window.setTimeout(() => setLate(true), 700);
+    return () => window.clearTimeout(t);
+  }, [ready]);
   return (
-    <group position={position}>
-      <mesh geometry={parts.frame} castShadow receiveShadow>
-        <meshStandardMaterial {...filamentMat} />
-      </mesh>
-      <mesh geometry={parts.lip} castShadow receiveShadow>
-        <meshStandardMaterial {...filamentMat} />
-      </mesh>
-      <mesh geometry={parts.pads} castShadow receiveShadow>
-        <meshStandardMaterial {...filamentMat} />
-      </mesh>
-      {parts.edges.map((e, i) => (
-        <mesh
-          key={i}
-          geometry={bar}
-          position={[e.x, e.y, LID.thick / 2]}
-          rotation={[0, 0, e.rotZ]}
-          scale={[e.len + parts.wallW, parts.wallW, LID.thick]}
-          castShadow
-          receiveShadow
-        >
-          <meshStandardMaterial {...filamentMat} />
-        </mesh>
-      ))}
-    </group>
+    <div className="relative h-full min-h-[20rem] w-full bg-surface">
+      {CanvasCmp && !glFailed ? (
+        <CanvasGuard onFail={() => setGlFailed(true)}>
+          <CaseCanvasSafe Canvas={CanvasCmp} {...props} />
+        </CanvasGuard>
+      ) : null}
+      {glFailed || glLost ? (
+        <p className="absolute inset-x-0 bottom-3 z-20 mx-auto max-w-md px-3">
+          <span className="block rounded-sm bg-elevated px-3 py-2 text-center text-xs leading-relaxed text-muted">
+            {glFailed
+              ? "3D did not start (Brave Shields often blocks WebGL). Lion icon → Shields down for this site, and enable graphics acceleration. Print pair still works."
+              : "Graphics glitched. Orbit again, or use Print pair — download still works."}
+          </span>
+        </p>
+      ) : null}
+      <MeshProgress pct={step.pct} label={step.label} visible={late && !ready && !glFailed} />
+      {building && ready && !glFailed ? (
+        <p className="mesh-chip" role="status">
+          Updating
+        </p>
+      ) : null}
+    </div>
   );
-}
+});
 
-function Scene({ view, scale }: { view: PartView; scale: number }) {
-  return (
-    <group rotation={[-Math.PI / 2, 0, 0]}>
-      {view !== "lid" && <StlPart url="/models/pi_zero_case_bottom.stl" />}
-      {view !== "bottom" && (
-        <LidMesh scale={scale} position={view === "assembled" ? [0, 0, LID_Z] : undefined} />
-      )}
-    </group>
-  );
-}
-
-export function CaseViewer({
-  view,
-  autoRotate,
-  scale,
-}: {
-  view: PartView;
-  autoRotate: boolean;
-  scale: number;
-}) {
-  return (
-    <Canvas
-      className="h-full w-full touch-none"
-      dpr={[1, 2]}
-      shadows
-      gl={{ antialias: true, alpha: false }}
-      camera={{ position: [42, 36, 58], fov: 32, near: 0.5, far: 400 }}
-    >
-      <color attach="background" args={["#111110"]} />
-      <ambientLight intensity={0.38} />
-      <hemisphereLight args={["#ffd7c2", "#1c1814", 0.65]} />
-      <directionalLight
-        position={[50, 70, 28]}
-        intensity={1.55}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-      />
-      <directionalLight position={[-40, 24, -18]} intensity={0.32} />
-      <spotLight position={[0, 90, 10]} intensity={0.45} angle={0.45} penumbra={0.6} />
-
-      <Suspense fallback={null}>
-        <Scene view={view} scale={scale} />
-      </Suspense>
-
-      <ContactShadows position={[0, -12, 0]} opacity={0.38} scale={90} blur={2.4} far={28} color="#0a0908" />
-
-      <OrbitControls
-        makeDefault
-        enableDamping
-        dampingFactor={0.08}
-        autoRotate={autoRotate}
-        autoRotateSpeed={0.7}
-        minDistance={38}
-        maxDistance={140}
-        maxPolarAngle={Math.PI / 1.55}
-      />
-    </Canvas>
-  );
+function CaseCanvasSafe({
+  Canvas,
+  ...props
+}: CaseViewerProps & { Canvas: ComponentType<CaseViewerProps> }) {
+  return <Canvas {...props} />;
 }

@@ -1,7 +1,8 @@
 {
-  "title": "Pi Zero Case",
+  "title": "Pi Zero Case Builder (Test)",
   "type": "website",
   "card": "custom",
-  "color": "e24a1c",
-  "description": "Inspect and download a Voronoi-lid Raspberry Pi Zero case."
+  "color": "FF5E18",
+  "description": "Parametric Voronoi Raspberry Pi Zero case. Test cut — nobody has printed this. Built in Grok Build.",
+  "banner": "/x-banner.jpg"
 }

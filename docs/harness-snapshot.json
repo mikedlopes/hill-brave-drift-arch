@@ -1,0 +1,126 @@
+{
+  "family": "pizero-case",
+  "version": 2,
+  "device": {
+    "id": "pi-zero",
+    "name": "Raspberry Pi Zero",
+    "drawing": "https://pip-assets.raspberrypi.com/categories/579-raspberry-pi-zero/documents/RP-008365-DS-1-raspberry-pi-zero-mechanical-drawing.pdf",
+    "pcb": {
+      "length": 65,
+      "width": 30,
+      "thick": 1.4,
+      "corner": 3
+    },
+    "holes": {
+      "dia": 2.75,
+      "ox": 3.5,
+      "oy": 3.5,
+      "sx": 58,
+      "sy": 23
+    },
+    "ports": {
+      "hdmi": 12.4,
+      "usbPower": 41.4,
+      "usbOtg": 54,
+      "sdFromSouth": 16.9
+    }
+  },
+  "envelope": {
+    "length": 70,
+    "width": 37.7,
+    "trayH": 9.98,
+    "lidThick": 2.15,
+    "assembled": 12.13,
+    "wall": 1.6,
+    "corner": 3.2,
+    "chamfer": 0.8
+  },
+  "pattern": {
+    "id": "truncated-cvt-voronoi",
+    "lloydIters": 2,
+    "boundarySeeds": "ghosts",
+    "web": 1.5,
+    "holeCornerR": 0.8,
+    "scaleMin": 1.5,
+    "scaleMax": 2,
+    "scaleDefault": 2,
+    "scaleStep": 0.05,
+    "punch": "offset-convex",
+    "jitterMinPct": 6,
+    "jitterMaxPct": 16,
+    "sliverMinArea": 9,
+    "sliverMinInradius": 1.32,
+    "fieldAt2x": 52,
+    "webMinAt2x": 1.4
+  },
+  "style": {
+    "id": "keychain-cover",
+    "gpio": "covered",
+    "hat": false,
+    "camera": "ribbon-window",
+    "filament": "#e24a1c",
+    "chrome": "#FF5E18"
+  },
+  "mods": {
+    "fastener": [
+      "snap",
+      "screw"
+    ],
+    "fit": [
+      "tight",
+      "standard",
+      "loose"
+    ],
+    "hdmi": [
+      "normal",
+      "fat"
+    ],
+    "usb": [
+      "normal",
+      "fat"
+    ],
+    "keyring": [
+      "on",
+      "off"
+    ],
+    "labelDefault": "ERGO"
+  },
+  "defaults": {
+    "fastener": "snap",
+    "fit": "standard",
+    "hdmi": "fat",
+    "usb": "fat",
+    "keyring": "on",
+    "scale": 2,
+    "label": "ERGO",
+    "zip": "pi_zero_case_2_00x_snap_hdmi-fat_usb-fat_lug.zip"
+  },
+  "lug": {
+    "bulbR": 7,
+    "holeR": 3.5,
+    "height": 3,
+    "out": 2
+  },
+  "finish": {
+    "lidWindow": "through-cut",
+    "lidFrame": "solid",
+    "trayFloor": "deboss",
+    "trayFloorDepth": 0.42,
+    "trayWalls": "smooth",
+    "outerChamfer": 0.8,
+    "outerChamferDeg": 45,
+    "portChamfer": 0.54,
+    "snapNubR": 0.45,
+    "cacheLid": "v18chamfer",
+    "bake": "c80w150h80v47"
+  },
+  "print": {
+    "layer": "0.20 mm",
+    "walls": "3 walls",
+    "infill": "20% infill",
+    "supports": "no supports",
+    "lidPose": "Lid lip-down",
+    "trayPose": "Tray floor-down",
+    "firstArticle": "Nobody has printed this cut. First pair is a fit article, not a gift."
+  }
+}
